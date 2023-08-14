@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nf-core/pathogenidentifier/master/assets/schema_input.json",
-    "title": "nf-core/pathogenidentifier pipeline - params.input schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/phageannotator/master/assets/schema_input.json",
+    "title": "nf-core/phageannotator pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
     "items": {
@@ -10,27 +10,36 @@
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces"
+                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "meta": ["id"]
+            },
+            "replicate": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Replicate ID must be provided and cannot contain spaces",
+                "meta": ["rep"]
+            },
+            "group": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Group ID must be provided and cannot contain spaces",
+                "meta": ["group"]
             },
             "fastq_1": {
                 "type": "string",
+                "format": "file-path",
+                "exists": true,
                 "pattern": "^\\S+\\.f(ast)?q\\.gz$",
                 "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
             },
             "fastq_2": {
                 "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
-                "anyOf": [
-                    {
-                        "type": "string",
-                        "pattern": "^\\S+\\.f(ast)?q\\.gz$"
-                    },
-                    {
-                        "type": "string",
-                        "maxLength": 0
-                    }
-                ]
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.f(ast)?q\\.gz$"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["sample", "replicate", "group", "fastq_1", "fastq_2"]
     }
 }
