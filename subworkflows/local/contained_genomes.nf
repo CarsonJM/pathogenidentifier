@@ -22,7 +22,7 @@ workflow CONTAINED_GENOMES {
     ch_bacteria_sketch = file('https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/gtdb-rs214/gtdb-rs214-k21.zip', checkIfExists: true)
     ch_contained_bacteria = SOURMASH_GATHER_BACTERIA ( ch_reads_sketch, ch_bacteria_sketch, false, false, false, false ).result
     // Download bacterial hits
-    ch_bacterial_genomes = GENOME_UPDATER ( ch_contained_bacteria, 'bacteria' )
+    ch_bacterial_genomes = GENOME_UPDATER ( ch_contained_bacteria )
 
     // Identify contained phages
     ch_phage_sketch = SOURMASH_SKETCH_PHAGE ( params.containment_phage_fasta ).signatures
