@@ -41,12 +41,12 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 include { SHORTREAD_PREPROCESSING   } from '../subworkflows/local/shortread_preprocessing'
 include { SHORTREAD_HOSTREMOVAL     } from '../subworkflows/local/shortread_hostremoval'
-include { CONTAINED_GENOMES         } from '../subworkflows/local/contained_genomes'
+// include { CONTAINED_GENOMES         } from '../subworkflows/local/contained_genomes'
 include { SAMPLE_ALIGNMENT          } from '../subworkflows/local/sample_alignment'
-include { BACTERIA_DEREPLICATION    } from '../subworkflows/local/bacteria_dereplication'
-include { PHAGE_DEREPLICATION       } from '../subworkflows/local/phage_dereplication'
-include { PHAGE_HOST_PREDICTION     } from '../subworkflows/local/phage_host_prediction'
-include { COMBINED_ALIGNMENT        } from '../subworkflows/local/combined_alignment'
+// include { BACTERIA_DEREPLICATION    } from '../subworkflows/local/bacteria_dereplication'
+// include { PHAGE_DEREPLICATION       } from '../subworkflows/local/phage_dereplication'
+// include { PHAGE_HOST_PREDICTION     } from '../subworkflows/local/phage_host_prediction'
+// include { COMBINED_ALIGNMENT        } from '../subworkflows/local/combined_alignment'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,7 +60,7 @@ include { COMBINED_ALIGNMENT        } from '../subworkflows/local/combined_align
 include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
-
+include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'   
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -77,7 +77,7 @@ workflow PATHOGENIDENTIFIER {
     // Read samplesheet using nf-validate
     Channel
         .fromSamplesheet("input")
-        .multiMap { meta, fastq_1, fastq_2, fasta ->
+        .multiMap { meta, fastq_1, fastq_2 ->
             fastq: [ meta, [ fastq_1, fastq_2 ] ]
         }
         .set { ch_input }
@@ -146,81 +146,81 @@ workflow PATHOGENIDENTIFIER {
         ch_reads_runmerged = ch_shortreads_hostremoved
     }
 
-    /*
-        SUBWORKFLOW: IDENTIFY CONTAINED GENOMES WITH SOURMASH
-    */
-    CONTAINED_GENOMES ( ch_reads_runmerged )
-    ch_contained_bacteria = CONTAINED_GENOMES.out.bacterial_genomes
-    ch_contained_phage = CONTAINED_GENOMES.out.phage_genomes
+    // /*
+    //     SUBWORKFLOW: IDENTIFY CONTAINED GENOMES WITH SOURMASH
+    // */
+    // CONTAINED_GENOMES ( ch_reads_runmerged )
+    // ch_contained_bacteria = CONTAINED_GENOMES.out.bacterial_genomes
+    // ch_contained_phage = CONTAINED_GENOMES.out.phage_genomes
 
-    /*
-        SUBWORKFLOW: ALIGN READS TO CONTAINED GENOMES
-    */
-    SAMPLE_ALIGNMENT ( ch_contained_bacteria, ch_contained_phage )
-    ch_aligned_bacteria = SAMPLE_ALIGNMENT.out.aligned_bacteria
-    ch_aligned_phage = SAMPLE_ALIGNMENT.out.aligned_phage
+    // /*
+    //     SUBWORKFLOW: ALIGN READS TO CONTAINED GENOMES
+    // */
+    // SAMPLE_ALIGNMENT ( ch_contained_bacteria, ch_contained_phage )
+    // ch_aligned_bacteria = SAMPLE_ALIGNMENT.out.aligned_bacteria
+    // ch_aligned_phage = SAMPLE_ALIGNMENT.out.aligned_phage
 
-    /*
-        SUBWORKFLOW: PREDICT HOST GENUS FOR PHAGES
-    */
-    PHAGE_HOST_PREDICTION ( ch_aligned_phage )
+//     /*
+//         SUBWORKFLOW: PREDICT HOST GENUS FOR PHAGES
+//     */
+//     PHAGE_HOST_PREDICTION ( ch_aligned_phage )
 
-    /*
-        SUBWORKFLOW: DEREPLICATE BACTERIAL GENOMES ACROSS SAMPLES
-    */
-    BACTERIA_DEREPLICATION ( ch_aligned_bacteria )
-    ch_dereplicated_bacteria = BACTERIA_DEREPLICATION.out.dereplicated_bacteria
+//     /*
+//         SUBWORKFLOW: DEREPLICATE BACTERIAL GENOMES ACROSS SAMPLES
+//     */
+//     BACTERIA_DEREPLICATION ( ch_aligned_bacteria )
+//     ch_dereplicated_bacteria = BACTERIA_DEREPLICATION.out.dereplicated_bacteria
 
-    /*
-        SUBWORKFLOW: DEREPLICATE PHAGE GENOMES ACROSS SAMPLES
-    */
-    PHAGE_DEREPLICATION ( ch_aligned_phage )
-    ch_dereplicated_phage = BACTERIA_DEREPLICATION.out.dereplicated_phage
+//     /*
+//         SUBWORKFLOW: DEREPLICATE PHAGE GENOMES ACROSS SAMPLES
+//     */
+//     PHAGE_DEREPLICATION ( ch_aligned_phage )
+//     ch_dereplicated_phage = BACTERIA_DEREPLICATION.out.dereplicated_phage
 
 
 
-    CUSTOM_DUMPSOFTWAREVERSIONS (
-        ch_versions.unique().collectFile(name: 'collated_versions.yml')
-    )
+//     CUSTOM_DUMPSOFTWAREVERSIONS (
+//         ch_versions.unique().collectFile(name: 'collated_versions.yml')
+//     )
 
-    //
-    // MODULE: MultiQC
-    //
-    workflow_summary    = WorkflowPathogenidentifier.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
+//     //
+//     // MODULE: MultiQC
+//     //
+//     workflow_summary    = WorkflowPathogenidentifier.paramsSummaryMultiqc(workflow, summary_params)
+//     ch_workflow_summary = Channel.value(workflow_summary)
 
-    methods_description    = WorkflowPathogenidentifier.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
-    ch_methods_description = Channel.value(methods_description)
+//     methods_description    = WorkflowPathogenidentifier.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
+//     ch_methods_description = Channel.value(methods_description)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+//     ch_multiqc_files = Channel.empty()
+//     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+//     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
+//     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+//     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
-}
+//     MULTIQC (
+//         ch_multiqc_files.collect(),
+//         ch_multiqc_config.toList(),
+//         ch_multiqc_custom_config.toList(),
+//         ch_multiqc_logo.toList()
+//     )
+//     multiqc_report = MULTIQC.out.report.toList()
+// }
 
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    COMPLETION EMAIL AND SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+// /*
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//     COMPLETION EMAIL AND SUMMARY
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// */
 
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
+// workflow.onComplete {
+//     if (params.email || params.email_on_fail) {
+//         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+//     }
+//     NfcoreTemplate.summary(workflow, params, log)
+//     if (params.hook_url) {
+//         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+//     }
 }
 
 /*
