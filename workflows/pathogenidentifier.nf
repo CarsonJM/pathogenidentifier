@@ -4,7 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { paramsSummaryLog; paramsSummaryMap } from 'plugin/nf-validation'
+include { paramsSummaryLog; paramsSummaryMap; fromSamplesheet } from 'plugin/nf-validation'
 
 def logo = NfcoreTemplate.logo(workflow, params.monochrome_logs)
 def citation = '\n' + WorkflowMain.citation(workflow) + '\n'
@@ -177,11 +177,6 @@ workflow PATHOGENIDENTIFIER {
     PHAGE_DEREPLICATION ( ch_aligned_phage )
     ch_dereplicated_phage = BACTERIA_DEREPLICATION.out.dereplicated_phage
 
-    /*
-        SUBWORKFLOW: CREATE DEREPLICATED DATABASE AND ALIGN READS
-    */
-    PHAGE_DEREPLICATION ( ch_aligned_phage )
-    ch_dereplicated_phage = BACTERIA_DEREPLICATION.out.dereplicated_phage
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

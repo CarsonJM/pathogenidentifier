@@ -5,12 +5,172 @@
     "description": "A bioinformatics pipeline for identifying specific pathogens in (meta)-genomic sequences.",
     "type": "object",
     "definitions": {
+        "phage_host_prediction": {
+            "title": "Phage host prediction",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "host_prediction_min_score": {
+                    "type": "number",
+                    "default": 0.75
+                }
+            }
+        },
+        "genome_alignment": {
+            "title": "Genome alignment",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "alignment_min_read_length": {
+                    "type": "integer",
+                    "default": 50
+                },
+                "alignment_min_identity": {
+                    "type": "integer",
+                    "default": 95
+                },
+                "alignment_min_percent_aligned": {
+                    "type": "integer",
+                    "default": 95
+                },
+                "alignment_abundance_method": {
+                    "type": "string",
+                    "default": "rpkm"
+                }
+            }
+        },
+        "genome_containment": {
+            "title": "Genome containment",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "containment_min_overlap_bacteria": {
+                    "type": "integer",
+                    "default": 10000
+                },
+                "containment_phage_fasta": {
+                    "type": "string"
+                },
+                "containment_min_overlap_phage": {
+                    "type": "integer",
+                    "default": 1000
+                }
+            }
+        },
+        "short_read_host_removal": {
+            "title": "Short read host removal",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "perform_shortread_hostremoval": {
+                    "type": "boolean"
+                },
+                "hostremoval_reference": {
+                    "type": "string"
+                },
+                "shortread_hostremoval_index": {
+                    "type": "string"
+                },
+                "shortread_hostremoval_very_sensitive": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "save_hostremoval_index": {
+                    "type": "integer"
+                },
+                "save_hostremoval_bam": {
+                    "type": "boolean"
+                },
+                "save_hostremoval_unmapped": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "short_read_run_merging": {
+            "title": "Short read run merging",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "perform_runmerging": {
+                    "type": "boolean"
+                },
+                "save_runmerged_reads": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "short_read_complexity_filtering": {
+            "title": "Short read complexity filtering",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "perform_shortread_complexityfilter": {
+                    "type": "boolean"
+                },
+                "shortread_complexityfilter_entropy": {
+                    "type": "number",
+                    "default": 0.3
+                },
+                "shortread_complexityfilter_fastp_threshold": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "save_complexityfiltered_reads": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "short_read_preprocessing": {
+            "title": "Short read preprocessing",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "perform_shortread_qc": {
+                    "type": "boolean"
+                },
+                "shortread_qc_skipadaptertrim": {
+                    "type": "boolean"
+                },
+                "shortread_qc_mergepairs": {
+                    "type": "boolean"
+                },
+                "shortread_qc_includeunmerged": {
+                    "type": "boolean"
+                },
+                "shortread_qc_adapter1": {
+                    "type": "string"
+                },
+                "shortread_qc_adapter2": {
+                    "type": "string"
+                },
+                "shortread_qc_adapterlist": {
+                    "type": "string"
+                },
+                "shortread_qc_minlength": {
+                    "type": "integer",
+                    "default": 15
+                },
+                "save_preprocessed_reads": {
+                    "type": "boolean"
+                }
+            }
+        },
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": [
+                "input",
+                "outdir"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
@@ -20,7 +180,8 @@
                     "pattern": "^\\S+\\.csv$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/pathogenidentifier/usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
+                    "fa_icon": "fas fa-file-csv",
+                    "schema": "assets/schema_input.json"
                 },
                 "outdir": {
                     "type": "string",
@@ -53,31 +214,6 @@
                     "description": "Name of iGenomes reference.",
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
-                },
-                "fasta": {
-                    "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
-                    "fa_icon": "far fa-file-code"
-                },
-                "igenomes_base": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "description": "Directory / URL base for iGenomes references.",
-                    "default": "s3://ngi-igenomes/igenomes",
-                    "fa_icon": "fas fa-cloud-download-alt",
-                    "hidden": true
-                },
-                "igenomes_ignore": {
-                    "type": "boolean",
-                    "description": "Do not load the iGenomes reference config.",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
                 }
             }
         },
@@ -175,14 +311,12 @@
                     "type": "boolean",
                     "description": "Display help text.",
                     "fa_icon": "fas fa-question-circle",
-                    "default": false,
                     "hidden": true
                 },
                 "version": {
                     "type": "boolean",
                     "description": "Display version and exit.",
                     "fa_icon": "fas fa-question-circle",
-                    "default": false,
                     "hidden": true
                 },
                 "publish_dir_mode": {
@@ -191,7 +325,14 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
                     "hidden": true
                 },
                 "email_on_fail": {
@@ -206,7 +347,6 @@
                     "type": "boolean",
                     "description": "Send plain-text email instead of HTML.",
                     "fa_icon": "fas fa-remove-format",
-                    "default": false,
                     "hidden": true
                 },
                 "max_multiqc_email_size": {
@@ -221,7 +361,6 @@
                     "type": "boolean",
                     "description": "Do not use coloured log outputs.",
                     "fa_icon": "fas fa-palette",
-                    "default": false,
                     "hidden": true
                 },
                 "hook_url": {
@@ -260,7 +399,6 @@
                     "type": "boolean",
                     "fa_icon": "far fa-eye-slash",
                     "description": "Show all params when using `--help`",
-                    "default": false,
                     "hidden": true,
                     "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
                 },
@@ -268,7 +406,6 @@
                     "type": "boolean",
                     "fa_icon": "far fa-check-circle",
                     "description": "Validation of parameters fails when an unrecognised parameter is found.",
-                    "default": false,
                     "hidden": true,
                     "help_text": "By default, when an unrecognised parameter is found, it returns a warinig."
                 },
@@ -276,7 +413,6 @@
                     "type": "boolean",
                     "fa_icon": "far fa-check-circle",
                     "description": "Validation of parameters in lenient more.",
-                    "default": false,
                     "hidden": true,
                     "help_text": "Allows string values that are parseable as numbers or booleans. For further information see [JSONSchema docs](https://github.com/everit-org/json-schema#lenient-mode)."
                 }
@@ -284,6 +420,27 @@
         }
     },
     "allOf": [
+        {
+            "$ref": "#/definitions/phage_host_prediction"
+        },
+        {
+            "$ref": "#/definitions/genome_alignment"
+        },
+        {
+            "$ref": "#/definitions/genome_containment"
+        },
+        {
+            "$ref": "#/definitions/short_read_host_removal"
+        },
+        {
+            "$ref": "#/definitions/short_read_run_merging"
+        },
+        {
+            "$ref": "#/definitions/short_read_complexity_filtering"
+        },
+        {
+            "$ref": "#/definitions/short_read_preprocessing"
+        },
         {
             "$ref": "#/definitions/input_output_options"
         },
