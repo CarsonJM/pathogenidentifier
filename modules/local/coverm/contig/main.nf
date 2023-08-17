@@ -8,12 +8,12 @@ process COVERM_CONTIG {
         'biocontainers/coverm:0.6.1--h1535e20_5' }"
 
     input:
+    tuple val(meta), path(contained_phage)
     tuple val(meta), path(reads)
-    path(fasta)
 
     output:
-    tuple val(meta), path("*.bam"), emit: bam
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*_phage_alignment_results.tsv")  , emit: alignment_results
+    path "versions.yml"                                     , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,17 +22,20 @@ process COVERM_CONTIG {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    samtools \\
-        sort \\
-        $args \\
-        -@ $task.cpus \\
-        -o ${prefix}.bam \\
-        -T $prefix \\
-        $bam
+    coverm \\
+        contig \\
+        -1 ${reads[0]} \\
+        -2 ${reads[1]} \\
+        --methods covered_bases \\
+        --reference $contained_phage \\
+        --output-file ${prefix}_phage_alignment_results.tsv \\
+        --threads $task.cpus \\
+        $args
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
+        coverm: \$(echo \$(coverm --version 2>&1) | sed 's/^.*coverm //; s/Using.*\$//' ))
     END_VERSIONS
     """
 
@@ -40,11 +43,11 @@ process COVERM_CONTIG {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bam
+    touch ${prefix}_phage_alignment_results.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
+        coverm: \$(echo \$(coverm --version 2>&1) | sed 's/^.*coverm //; s/Using.*\$//' ))
     END_VERSIONS
     """
 }

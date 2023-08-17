@@ -8,11 +8,11 @@ process GENOME_UPDATER {
         'biocontainers/genome_updater:0.6.3--hdfd78af_1' }"
 
     input:
-    tuple val(meta), path(sourmash_hits)
+    tuple val(meta), path(filtered_assembly_summary)
 
     output:
-    tuple val(meta), path("contained_bacterial_genomes"), emit: contained_bacterial_genomes
-    path "versions.yml"                                 , emit: versions
+    tuple val(meta), path("bacterial_genomes")  , emit: bacterial_genomes
+    path "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,32 +21,35 @@ process GENOME_UPDATER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cat
-
     genome_updater.sh \\
-        -d "refseq,genbank" \\
-        -g "bacteria" \\
+        -e $filtered_assembly_summary \\
         -f "genomic.fna.gz" \\
-        -o contained_bacterial_genomes \\
+        -M "gtdb" \\
+        -o . \\
         -t $task.cpus \\
+        -a \\
         $args
+
+    mkdir -p bacterial_genomes
+    mv **/files/*.fna.gz bacterial_genomes
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
+        genome_updater: 0.6.3
     END_VERSIONS
     """
-
 
     stub:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bam
+    mkdir -p bacterial_genomes
+    touch bacterial_genomes/bacterial_genome.fna.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        : \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' ))
+        genome_updater: 0.6.3
     END_VERSIONS
     """
 }

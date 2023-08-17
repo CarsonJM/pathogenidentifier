@@ -1,0 +1,13 @@
+Changes in module 'nf-core/sourmash/sketch'
+--- modules/nf-core/sourmash/sketch/main.nf
++++ modules/nf-core/sourmash/sketch/main.nf
+@@ -24,7 +24,6 @@
+     """
+     sourmash sketch \\
+         $args \\
+-        --merge '${prefix}' \\
+         --output '${prefix}.sig' \\
+         $sequence
+ 
+
+************************************************************

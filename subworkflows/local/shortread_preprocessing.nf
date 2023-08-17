@@ -4,6 +4,7 @@
 
 
 include { SHORTREAD_FASTP             } from './shortread_fastp'
+include { FASTQC as FASTQC_PROCESSED  } from '../../modules/nf-core/fastqc/main'
 
 workflow SHORTREAD_PREPROCESSING {
     take:
