@@ -11,7 +11,7 @@ process GENOME_UPDATER {
     tuple val(meta), path(filtered_assembly_summary)
 
     output:
-    tuple val(meta), path("bacterial_genomes")  , emit: bacterial_genomes
+    tuple val(meta), path("*_bacterial_genomes")  , emit: bacterial_genomes
     path "versions.yml"                         , emit: versions
 
     when:
@@ -27,11 +27,13 @@ process GENOME_UPDATER {
         -M "gtdb" \\
         -o . \\
         -t $task.cpus \\
+        -L curl \\
         -a \\
         $args
 
-    mkdir -p bacterial_genomes
-    mv **/files/*.fna.gz bacterial_genomes
+    mkdir -p ${prefix}_bacterial_genomes
+    mv **/files/*.fna.gz ${prefix}_bacterial_genomes
+    gunzip ${prefix}_bacterial_genomes/*.fna.gz
 
 
     cat <<-END_VERSIONS > versions.yml

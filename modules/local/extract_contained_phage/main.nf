@@ -12,7 +12,7 @@ process EXTRACT_CONTAINED_PHAGE {
     path (phage_fasta)
 
     output:
-    tuple val(meta), path("*.phage_genomes.fna.gz") , emit: phage_genomes
+    tuple val(meta), path("*.phage_genomes.fna") , emit: phage_genomes
     path "versions.yml"                             , emit: versions
 
     when:
@@ -26,8 +26,6 @@ process EXTRACT_CONTAINED_PHAGE {
     -p $phage_fasta \\
     -s $sourmash_hits \\
     -o ${prefix}.phage_genomes.fna
-
-    gzip ${prefix}.phage_genomes.fna
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

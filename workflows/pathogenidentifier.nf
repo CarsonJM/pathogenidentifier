@@ -33,8 +33,9 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 */
 
 //
-// MODULE:
+// MODULE: Local modules
 //
+include { COVERM_PHAGE_AND_BACTERIA } from '../modules/local/coverm/phage_and_bacteria/main'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -44,9 +45,8 @@ include { SHORTREAD_HOSTREMOVAL     } from '../subworkflows/local/shortread_host
 include { CONTAINED_GENOMES         } from '../subworkflows/local/contained_genomes'
 include { SAMPLE_ALIGNMENT          } from '../subworkflows/local/sample_alignment'
 include { BACTERIA_DEREPLICATION    } from '../subworkflows/local/bacteria_dereplication'
-// include { PHAGE_DEREPLICATION       } from '../subworkflows/local/phage_dereplication'
-// include { PHAGE_HOST_PREDICTION     } from '../subworkflows/local/phage_host_prediction'
-// include { COMBINED_ALIGNMENT        } from '../subworkflows/local/combined_alignment'
+include { PHAGE_DEREPLICATION       } from '../subworkflows/local/phage_dereplication'
+include { PHAGE_HOST_PREDICTION     } from '../subworkflows/local/phage_host_prediction'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,6 +61,8 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
+include { GUNZIP as GUNZIP_PHAGE      } from '../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_BACTERIA   } from '../modules/nf-core/gunzip/main'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -91,6 +93,7 @@ workflow PATHOGENIDENTIFIER {
     /*
         SUBWORKFLOW: PERFORM PREPROCESSING
     */
+    adapterlist = params.shortread_qc_adapterlist ? file(params.shortread_qc_adapterlist) : []
     if ( params.perform_shortread_qc ) {
         ch_shortreads_preprocessed = SHORTREAD_PREPROCESSING ( ch_input.fastq, adapterlist ).reads
         ch_versions = ch_versions.mix( SHORTREAD_PREPROCESSING.out.versions )
@@ -166,19 +169,23 @@ workflow PATHOGENIDENTIFIER {
     BACTERIA_DEREPLICATION ( ch_aligned_bacteria )
     ch_dereplicated_bacteria = BACTERIA_DEREPLICATION.out.dereplicated_bacteria
 
-//     /*
-//         SUBWORKFLOW: DEREPLICATE PHAGE GENOMES ACROSS SAMPLES
-//     */
-//     PHAGE_DEREPLICATION ( ch_aligned_phage )
-//     ch_dereplicated_phage = BACTERIA_DEREPLICATION.out.dereplicated_phage
+    /*
+        SUBWORKFLOW: DEREPLICATE PHAGE GENOMES ACROSS SAMPLES
+    */
+    PHAGE_DEREPLICATION ( ch_aligned_phage )
+    ch_dereplicated_phage = PHAGE_DEREPLICATION.out.votu_representatives
 
-//     /*
-//         SUBWORKFLOW: PREDICT HOST GENUS FOR PHAGES
-//     */
-//     PHAGE_HOST_PREDICTION ( ch_aligned_phage )
+    /*
+        SUBWORKFLOW: PREDICT HOST GENUS FOR PHAGES
+    */
+    PHAGE_HOST_PREDICTION ( ch_dereplicated_phage )
 
-
-
+    //
+    // MODULE: ALIGN READS TO DEREPLICATED DATABASE
+    //
+    ch_final_alignment_phage = GUNZIP_PHAGE ( ch_dereplicated_phage ).gunzip
+    ch_final_alignment_bacteria = GUNZIP_BACTERIA ( ch_dereplicated_bacteria ).gunzip
+    COVERM_PHAGE_AND_BACTERIA ( ch_dereplicated_bacteria, ch_dereplicated_phage, ch_reads_runmerged )
 
 
     CUSTOM_DUMPSOFTWAREVERSIONS (

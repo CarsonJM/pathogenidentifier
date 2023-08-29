@@ -25,6 +25,7 @@ process BLAST_MAKEBLASTDB {
         $args
     mkdir blast_db
     mv ${fasta}* blast_db
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         blast: \$(blastn -version 2>&1 | sed 's/^.*blastn: //; s/ .*\$//')

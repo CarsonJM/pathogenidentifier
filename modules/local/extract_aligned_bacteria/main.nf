@@ -12,7 +12,7 @@ process EXTRACT_ALIGNED_BACTERIA {
     tuple val(meta), path(bacteria_alignments)
 
     output:
-    tuple val(meta), path("*_aligned_bacteria_genomes/*.fna.gz")    , emit: aligned_bacteria
+    tuple val(meta), path("*.fna")    , emit: aligned_bacteria
     path "versions.yml"                                             , emit: versions
 
     when:
@@ -27,7 +27,8 @@ process EXTRACT_ALIGNED_BACTERIA {
     -p $contained_bacteria \\
     -s $bacteria_alignments \\
     -m $params.alignment_min_covered_bases_bacteria \\
-    -o ${prefix}_aligned_bacteria_genomes
+    -r ${prefix} \\
+    -o .
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -10,7 +10,7 @@ process DREP_DEREPLICATE {
     tuple val(meta), path(bacteria_genomes)
 
     output:
-    path("dereplicated_genomes/*.fna.gz") , emit: dereplicated_bacteria
+    tuple val(meta), path("dereplicated_genomes/*.fna.gz") , emit: dereplicated_bacteria
     path "versions.yml"                   , emit: versions
 
     when:
@@ -19,8 +19,6 @@ process DREP_DEREPLICATE {
     script:
     def args = task.ext.args ?: ''
     """
-    gunzip ./*.fna.gz
-
     dRep \\
         dereplicate \\
             . \\

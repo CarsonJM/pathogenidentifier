@@ -1,6 +1,6 @@
-process VOTUCLUST_ANICALC {
+process EXTRACT_VOTU_REPRESENTATIVES {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     conda "conda-forge::biopython=1.78 conda-forge::pandas=1.2.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,11 +8,11 @@ process VOTUCLUST_ANICALC {
         'quay.io/biocontainers/mulled-v2-80c23cbcd32e2891421c54d1899665046feb07ef:77a31e289d22068839533bf21f8c4248ad274b60-0' }"
 
     input:
-    tuple val(meta), path(combined_fasta)
-    path blast_tsv
+    tuple val(meta), path(fasta)
+    tuple val(meta), path(clusters_tsv)
 
     output:
-    path('*_ani.tsv')   , emit: ani_tsv
+    tuple val(meta), path('*_votu_representatives/*.fna.gz') , emit: votu_representatives
     path  "versions.yml" , emit: versions
 
     when:
@@ -20,10 +20,16 @@ process VOTUCLUST_ANICALC {
 
     script:
     def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    anicalc.py \\
-    -i $blast_tsv \\
-    -o ${parsed_combined_fasta}_ani.tsv
+    mkdir ${prefix}_votu_representatives
+
+    extract_votu_representatives.py \\
+    $clusters_tsv \\
+    $fasta \\
+    ${prefix}_votu_representatives
+
+    gzip ${prefix}_votu_representatives/*.fna
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

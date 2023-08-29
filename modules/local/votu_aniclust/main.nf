@@ -1,6 +1,6 @@
-process BLAST_REPRESENTATIVES {
-    tag "$parsed_combined_fasta"
-    label 'process_medium'
+process VOTU_ANICLUST {
+    tag "$meta.id"
+    label 'process_low'
 
     conda "conda-forge::biopython=1.78 conda-forge::pandas=1.2.4"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,11 +8,11 @@ process BLAST_REPRESENTATIVES {
         'quay.io/biocontainers/mulled-v2-80c23cbcd32e2891421c54d1899665046feb07ef:77a31e289d22068839533bf21f8c4248ad274b60-0' }"
 
     input:
-    path parsed_combined_fasta
-    path clusters_tsv
+    tuple val(meta), path(fasta)
+    tuple val(meta), path(ani_tsv)
 
     output:
-    path('*representatives.fna') , emit: cluster_representatives
+    tuple val(meta), path('*_clusters.tsv') , emit: clusters_tsv
     path  "versions.yml" , emit: versions
 
     when:
@@ -20,11 +20,13 @@ process BLAST_REPRESENTATIVES {
 
     script:
     def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cluster_representatives.py \\
-    $clusters_tsv \\
-    $parsed_combined_fasta \\
-    "$parsed_combined_fasta"_cluster_representatives.fna
+    aniclust.py \\
+    --fna ${fasta} \\
+    --ani $ani_tsv \\
+    --out ${prefix}_clusters.tsv \\
+    $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -23,12 +23,14 @@ process BLAST_BLASTN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     DB=`find -L ./ -name "*.ndb" | sed 's/\\.ndb\$//'`
+
     blastn \\
         -num_threads $task.cpus \\
         -db \$DB \\
-        -query $fasta \\
+        -query ${fasta} \\
         $args \\
         -out ${prefix}.blastn.txt
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         blast: \$(blastn -version 2>&1 | sed 's/^.*blastn: //; s/ .*\$//')

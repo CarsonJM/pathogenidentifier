@@ -46,7 +46,6 @@ def extract_contained_phage(phage_fasta, sourmash_results, output):
                 if record.id in tested_genomes:
                     continue
                 else:
-                    record.id = "mash_screen|" + record.id
                     contained_genomes.append(record)
                     tested_genomes.add(record.id)
     SeqIO.write(contained_genomes, output, "fasta")

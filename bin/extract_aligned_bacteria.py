@@ -30,6 +30,11 @@ def parse_args(args=None):
         help="Minimum number of bases covered by reads to consider a bacteria present in a sample.",
     )
     parser.add_argument(
+        "-r",
+        "--prefix",
+        help="Prefix for renaming FASTA files, so each filename is unique.",
+    )
+    parser.add_argument(
         "-o",
         "--output_dir",
         help="Output directory containing FASTA files for bacterial genomes with substantial alignment as determined via CoverM genome.",
@@ -37,14 +42,14 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def extract_contained_bacteria(bacteria_fasta_dir, coverm_results, min_covered_bases, output_dir):
+def extract_contained_bacteria(bacteria_fasta_dir, coverm_results, min_covered_bases, prefix, output_dir):
     coverm_results_df = pd.read_csv(
         coverm_results,
         sep='\t',
         names=['genomes', 'covered_bases']
     )
     coverm_results_filtered = coverm_results_df[coverm_results_df['covered_bases'] > min_covered_bases]
-    coverm_results_filtered['filename'] = coverm_results_filtered['genomes'] + '.fna.gz'
+    coverm_results_filtered['filename'] = coverm_results_filtered['genomes'] + '.fna'
     coverm_aligned_files = set(coverm_results_filtered['filename'])
 
     for file in os.listdir(bacteria_fasta_dir):
@@ -52,13 +57,14 @@ def extract_contained_bacteria(bacteria_fasta_dir, coverm_results, min_covered_b
         if filename in coverm_aligned_files:
             print(filename)
             print(file)
-            shutil.copy(bacteria_fasta_dir + '/' + file, output_dir)
+            shutil.copy2(bacteria_fasta_dir + '/' + file, output_dir + '/' + prefix + '_' + file)
 
 def main(args=None):
     args = parse_args(args)
     extract_contained_bacteria(args.bacteria_fasta_dir,
                             args.coverm_results,
                             args.min_covered_bases,
+                            args.prefix,
                             args.output_dir)
 
 

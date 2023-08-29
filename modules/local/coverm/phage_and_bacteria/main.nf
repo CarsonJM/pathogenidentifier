@@ -1,4 +1,4 @@
-process COVERM_GENOME {
+process COVERM_PHAGE_AND_BACTERIA {
     tag "$meta.id"
     label 'process_high'
 
@@ -8,11 +8,12 @@ process COVERM_GENOME {
         'biocontainers/coverm:0.6.1--h1535e20_5' }"
 
     input:
-    tuple val(meta), path(contained_bacteria)
+    tuple val(meta), path(dereplicated_bacteria)
+    tuple val(meta), path(dereplicated_phage)
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*_bacteria_alignment_results.tsv")  , emit: alignment_results
+    tuple val(meta), path("*_final_alignment_results.tsv")  , emit: alignment_results
     path "versions.yml"                                         , emit: versions
 
     when:
@@ -22,16 +23,21 @@ process COVERM_GENOME {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    mkdir -p phage_and_bacteria_combined
+    mv ${dereplicated_phage} phage_and_bacteria_combined
+    mv ${dereplicated_bacteria} phage_and_bacteria_combined
+
     coverm \\
         genome \\
         -1 ${reads[0]} \\
         -2 ${reads[1]} \\
         --methods covered_bases \\
-        --genome-fasta-directory $contained_bacteria \\
-        --genome-fasta-extension .fna \\
-        --output-file ${prefix}_bacteria_alignment_results.tsv \\
+        --genome-fasta-directory phage_and_bacteria_combined \\
+        --genome-fasta-extension fna \\
+        --output-file ${prefix}_final_alignment_results.tsv \\
         --threads $task.cpus \\
         $args
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

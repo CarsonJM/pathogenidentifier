@@ -12,7 +12,7 @@ process EXTRACT_ALIGNED_PHAGE {
     tuple val(meta), path(phage_alignments)
 
     output:
-    tuple val(meta), path("*.aligned.fna.gz")   , emit: aligned_phage
+    tuple val(meta), path("*.aligned.fna")   , emit: aligned_phage
     path "versions.yml"                         , emit: versions
 
     when:
@@ -27,8 +27,6 @@ process EXTRACT_ALIGNED_PHAGE {
     -s $phage_alignments \\
     -m $params.alignment_min_covered_bases_phage \\
     -o ${prefix}.aligned.fna
-
-    gzip ${prefix}.aligned.fna
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

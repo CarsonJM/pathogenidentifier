@@ -46,15 +46,13 @@ def extract_contained_phage(phage_fasta, coverm_results, min_covered_bases, outp
 
     aligned_genomes = []
     tested_genomes = set()
-    with gzip.open(phage_fasta, "rt") as phage_fasta_gunzip:
-        for record in SeqIO.parse(phage_fasta_gunzip, "fasta"):
-            if record.id in coverm_aligned_contigs:
-                if record.id in tested_genomes:
-                    continue
-                else:
-                    record.id = "mash_screen|" + record.id
-                    aligned_genomes.append(record)
-                    tested_genomes.add(record.id)
+    for record in SeqIO.parse(phage_fasta, "fasta"):
+        if record.id in coverm_aligned_contigs:
+            if record.id in tested_genomes:
+                continue
+            else:
+                aligned_genomes.append(record)
+                tested_genomes.add(record.id)
     SeqIO.write(aligned_genomes, output, "fasta")
 
 
