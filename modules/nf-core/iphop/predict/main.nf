@@ -24,13 +24,12 @@ process IPHOP_PREDICT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    cat ${fasta}/*.fna.gz > combined_phages.fasta.gz
-    gunzip combined_phages.fasta.gz
+    cat $fasta > combined_phage_fasta.fna
     export PERL5LIB=/usr/local/lib/perl5/site_perl/5.22.0
 
     iphop \\
         predict \\
-        --fa_file combined_phages.fasta \\
+        --fa_file combined_phage_fasta.fna \\
         --out_dir iphop_results \\
         --db_dir $iphop_db \\
         --num_threads $task.cpus \\

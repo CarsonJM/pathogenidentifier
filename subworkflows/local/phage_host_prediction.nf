@@ -22,9 +22,10 @@ workflow PHAGE_HOST_PREDICTION {
     }
 
     //
-    // MODULE: Predict phage host with iphop
+    // MODULE: Predict virus host using iPHoP
     //
-    IPHOP_PREDICT ( dereplicated_phage, ch_iphop_db )
+    ch_split_seqs_fasta = dereplicated_phage.splitFasta( by: 100, file: true)
+    IPHOP_PREDICT ( ch_split_seqs_fasta, ch_iphop_db )
     ch_versions = ch_versions.mix( IPHOP_PREDICT.out.versions )
 
     emit:

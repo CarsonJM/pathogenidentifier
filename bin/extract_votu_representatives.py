@@ -27,7 +27,7 @@ for line in clusters:
 derep_reps_set = set(derep_reps)
 
 
-for record in SeqIO.parse(input_fasta_gunzip, "fasta"):
+for record in SeqIO.parse(input_fasta, "fasta"):
     record_id_base = record.id
     if len(record_id_base.split('|provirus')) > 1:
         record_id_base = record_id_base.split('|provirus')[0]

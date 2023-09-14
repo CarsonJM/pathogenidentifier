@@ -8,8 +8,7 @@ process COVERM_CONTIG {
         'biocontainers/coverm:0.6.1--h1535e20_5' }"
 
     input:
-    tuple val(meta), path(contained_phage)
-    tuple val(meta), path(reads)
+    tuple val(meta), path(contained_phage), path(reads)
 
     output:
     tuple val(meta), path("*_phage_alignment_results.tsv")  , emit: alignment_results

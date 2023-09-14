@@ -8,11 +8,10 @@ process EXTRACT_VOTU_REPRESENTATIVES {
         'quay.io/biocontainers/mulled-v2-80c23cbcd32e2891421c54d1899665046feb07ef:77a31e289d22068839533bf21f8c4248ad274b60-0' }"
 
     input:
-    tuple val(meta), path(fasta)
-    tuple val(meta), path(clusters_tsv)
+    tuple val(meta), path(fasta), path(clusters_tsv)
 
     output:
-    tuple val(meta), path('*_votu_representatives/*.fna.gz') , emit: votu_representatives
+    tuple val(meta), path('*_votu_representatives/*.fna') , emit: votu_representatives
     path  "versions.yml" , emit: versions
 
     when:
@@ -28,8 +27,6 @@ process EXTRACT_VOTU_REPRESENTATIVES {
     $clusters_tsv \\
     $fasta \\
     ${prefix}_votu_representatives
-
-    gzip ${prefix}_votu_representatives/*.fna
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

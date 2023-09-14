@@ -10,7 +10,7 @@ process DREP_DEREPLICATE {
     tuple val(meta), path(bacteria_genomes)
 
     output:
-    tuple val(meta), path("dereplicated_genomes/*.fna.gz") , emit: dereplicated_bacteria
+    tuple val(meta), path("dereplicated_genomes/*.fna") , emit: dereplicated_bacteria
     path "versions.yml"                   , emit: versions
 
     when:
@@ -26,9 +26,6 @@ process DREP_DEREPLICATE {
             --genomes ./*.fna \\
             --ignoreGenomeQuality \\
             $args
-
-    gzip dereplicated_genomes/*.fna
-
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

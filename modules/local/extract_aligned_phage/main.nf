@@ -8,8 +8,7 @@ process EXTRACT_ALIGNED_PHAGE {
         'biocontainers/mulled-v2-80c23cbcd32e2891421c54d1899665046feb07ef:77a31e289d22068839533bf21f8c4248ad274b60-0' }"
 
     input:
-    tuple val(meta), path(contained_phage)
-    tuple val(meta), path(phage_alignments)
+    tuple val(meta), path(contained_phage), path(phage_alignments)
 
     output:
     tuple val(meta), path("*.aligned.fna")   , emit: aligned_phage

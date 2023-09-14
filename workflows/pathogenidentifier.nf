@@ -183,8 +183,7 @@ workflow PATHOGENIDENTIFIER {
     //
     // MODULE: ALIGN READS TO DEREPLICATED DATABASE
     //
-    ch_final_alignment_phage = GUNZIP_PHAGE ( ch_dereplicated_phage ).gunzip
-    ch_final_alignment_bacteria = GUNZIP_BACTERIA ( ch_dereplicated_bacteria ).gunzip
+    ch_coverm_phage_bacteria_input =
     COVERM_PHAGE_AND_BACTERIA ( ch_dereplicated_bacteria, ch_dereplicated_phage, ch_reads_runmerged )
 
 

@@ -14,7 +14,7 @@ process COVERM_PHAGE_AND_BACTERIA {
 
     output:
     tuple val(meta), path("*_final_alignment_results.tsv")  , emit: alignment_results
-    path "versions.yml"                                         , emit: versions
+    path "versions.yml"                                     , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -24,8 +24,8 @@ process COVERM_PHAGE_AND_BACTERIA {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     mkdir -p phage_and_bacteria_combined
-    mv ${dereplicated_phage} phage_and_bacteria_combined
-    mv ${dereplicated_bacteria} phage_and_bacteria_combined
+    cp ${dereplicated_phage} phage_and_bacteria_combined
+    cp ${dereplicated_bacteria} phage_and_bacteria_combined
 
     coverm \\
         genome \\

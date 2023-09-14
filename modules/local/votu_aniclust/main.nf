@@ -8,8 +8,7 @@ process VOTU_ANICLUST {
         'quay.io/biocontainers/mulled-v2-80c23cbcd32e2891421c54d1899665046feb07ef:77a31e289d22068839533bf21f8c4248ad274b60-0' }"
 
     input:
-    tuple val(meta), path(fasta)
-    tuple val(meta), path(ani_tsv)
+    tuple val(meta), path(fasta), path(ani_tsv)
 
     output:
     tuple val(meta), path('*_clusters.tsv') , emit: clusters_tsv

@@ -29,7 +29,7 @@ workflow PHAGE_DEREPLICATION {
     //
     // MODULE: Make BLAST database for phage all-v-all alignment
     //
-    BLAST_MAKEBLASTDB ( ch_combined_phage_fasta )
+    BLAST_MAKEBLASTDB ( ch_combined_phage_fasta.map{ it -> it[1] } )
 
     //
     // MODULE: Run all-v-all BLAST
@@ -44,12 +44,14 @@ workflow PHAGE_DEREPLICATION {
     //
     // MODULE: Cluster phage genomes based on ANI and AF
     //
-    VOTU_ANICLUST ( ch_combined_phage_fasta, VOTU_ANICALC.out.ani_tsv )
+    ch_votu_aniclust_input = ch_combined_phage_fasta.join( VOTU_ANICALC.out.ani_tsv, by:0 )
+    VOTU_ANICLUST ( ch_votu_aniclust_input )
 
     //
     // MODULE: Extract cluster representatives
     //
-    EXTRACT_VOTU_REPRESENTATIVES ( ch_combined_phage_fasta, VOTU_ANICLUST.out.clusters_tsv )
+    ch_extract_votu_reps_input = ch_combined_phage_fasta.join( VOTU_ANICLUST.out.clusters_tsv, by:0 )
+    EXTRACT_VOTU_REPRESENTATIVES ( ch_extract_votu_reps_input)
 
     emit:
     votu_representatives  = EXTRACT_VOTU_REPRESENTATIVES.out.votu_representatives  // channel: [ val(meta), [ fasta ] ]
