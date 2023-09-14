@@ -3,6 +3,7 @@
 //
 include { IPHOP_DOWNLOAD    } from '../../modules/nf-core/iphop/download/main'
 include { IPHOP_PREDICT     } from '../../modules/nf-core/iphop/predict/main'
+include { CAT_CAT2          } from '../../modules/nf-core/cat/cat2/main'
 
 workflow PHAGE_HOST_PREDICTION {
     take:
@@ -22,9 +23,14 @@ workflow PHAGE_HOST_PREDICTION {
     }
 
     //
+    // MODULE: Combine virus fastas into one
+    //
+    ch_combined_virus_fasta = CAT_CAT2 ( dereplicated_phage ).file_out
+
+    //
     // MODULE: Predict virus host using iPHoP
     //
-    ch_split_seqs_fasta = dereplicated_phage.splitFasta( by: 100, file: true)
+    ch_split_seqs_fasta = ch_combined_virus_fasta.splitFasta( by: 100, file: true)
     IPHOP_PREDICT ( ch_split_seqs_fasta, ch_iphop_db )
     ch_versions = ch_versions.mix( IPHOP_PREDICT.out.versions )
 

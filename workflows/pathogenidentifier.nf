@@ -180,10 +180,10 @@ workflow PATHOGENIDENTIFIER {
     */
     PHAGE_HOST_PREDICTION ( ch_dereplicated_phage )
 
+
     //
     // MODULE: ALIGN READS TO DEREPLICATED DATABASE
     //
-    ch_coverm_phage_bacteria_input =
     COVERM_PHAGE_AND_BACTERIA ( ch_dereplicated_bacteria, ch_dereplicated_phage, ch_reads_runmerged )
 
 
